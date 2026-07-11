@@ -22,3 +22,5 @@ apps/backend/data/
 
 # OS
 .DS_Store
+.vercel
+package-lock.json
