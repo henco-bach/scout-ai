@@ -14,7 +14,11 @@ app = FastAPI(title=settings.app_name)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
-    allow_credentials=True,
+    # No cookies/auth are ever sent by the frontend, so credentials aren't
+    # needed — and Starlette refuses to emit Access-Control-Allow-Origin at
+    # all when allow_origins=["*"] is combined with allow_credentials=True
+    # (invalid per the CORS spec), silently breaking every request.
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
