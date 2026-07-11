@@ -1,0 +1,26 @@
+name: scout-ai
+
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/backend.Dockerfile
+    env_file: ../apps/backend/.env
+    ports:
+      - "8000:8000"
+    volumes:
+      - scout_ai_data:/app/data
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/frontend.Dockerfile
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  scout_ai_data:

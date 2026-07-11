@@ -1,0 +1,24 @@
+# Node
+node_modules/
+.next/
+.turbo/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Runtime data (SQLite DB + uploaded videos)
+apps/backend/data/
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store

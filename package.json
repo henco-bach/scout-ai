@@ -1,0 +1,15 @@
+{
+  "name": "scout-ai",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/frontend",
+    "packages/shared"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=frontend",
+    "build": "npm run build --workspace=frontend",
+    "lint": "npm run lint --workspace=frontend",
+    "typecheck": "npm run typecheck --workspace=@scout-ai/shared && tsc --noEmit -p apps/frontend/tsconfig.json"
+  }
+}
