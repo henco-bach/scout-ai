@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, BarChart3, Upload } from "lucide-react";
+import { BarChart3, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -16,8 +17,14 @@ export function Sidebar() {
   return (
     <aside className="flex h-full w-60 shrink-0 flex-col border-r border-border bg-card/40 px-4 py-6">
       <Link href="/" className="mb-8 flex items-center gap-2 px-2">
-        <LayoutDashboard className="size-5 text-primary" strokeWidth={1.75} />
-        <span className="font-heading text-lg font-semibold tracking-tight">Scout AI</span>
+        <Image src="/brand/icon.png" alt="" width={28} height={28} className="shrink-0" />
+        <Image
+          src="/brand/wordmark.png"
+          alt="Scout AI"
+          width={100}
+          height={20}
+          className="h-5 w-auto"
+        />
       </Link>
 
       <nav className="flex flex-col gap-1">
