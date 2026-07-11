@@ -47,8 +47,10 @@ HEATMAP_ROWS = 12
 MOMENTUM_BUCKETS = 10
 
 HOME_COLOR = sv.Color.from_hex("#18C37E")
-AWAY_COLOR = sv.Color.from_hex("#9CA3AF")
-BALL_COLOR = sv.Color.from_hex("#FFFFFF")
+# Matches the "away" rose used by the dashboard charts — reads far better on
+# grass than the old gray.
+AWAY_COLOR = sv.Color.from_hex("#FB7185")
+BALL_COLOR = sv.Color.from_hex("#FFD700")
 
 # Standard pitch dimensions, used to convert normalized on-screen movement
 # into an approximate distance. No camera calibration/homography is applied,
@@ -493,24 +495,11 @@ def _render_annotated_video(
         for track_id, (x1, y1, x2, y2) in frame_people_boxes[sample_index].items():
             team = team_by_track.get(track_id, TeamSide.HOME)
             color = (HOME_COLOR if team is TeamSide.HOME else AWAY_COLOR).as_bgr()
-            top_left, bottom_right = (int(x1), int(y1)), (int(x2), int(y2))
-            cv2.rectangle(frame, top_left, bottom_right, color, 2)
-            cv2.putText(
-                frame,
-                f"#{track_id}",
-                (top_left[0], max(top_left[1] - 8, 0)),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.5,
-                color,
-                2,
-            )
+            _draw_player_marker(frame, (x1, y1, x2, y2), track_id, color)
 
         ball_box = frame_ball_box[sample_index]
         if ball_box is not None:
-            bx1, by1, bx2, by2 = ball_box
-            cv2.rectangle(
-                frame, (int(bx1), int(by1)), (int(bx2), int(by2)), BALL_COLOR.as_bgr(), 2
-            )
+            _draw_ball_marker(frame, ball_box)
 
         writer.write(frame)
 
@@ -534,6 +523,71 @@ def _render_annotated_video(
     )
     Path(raw_path).unlink(missing_ok=True)
     return output_path
+
+
+def _draw_player_marker(
+    frame: np.ndarray,
+    box: tuple[float, float, float, float],
+    track_id: int,
+    color: tuple[int, int, int],
+) -> None:
+    """Broadcast-style marker: a flat ellipse under the player's feet plus a
+    filled ID tag above their head — instead of a bounding box, which reads
+    as 'debug output' rather than a product."""
+    x1, y1, x2, y2 = box
+    cx = int((x1 + x2) / 2)
+    feet_y = int(y2)
+    half_w = max(int((x2 - x1) * 0.55), 12)
+
+    # Ellipse under the feet (partial arc looks lighter than a full ring).
+    cv2.ellipse(
+        frame,
+        center=(cx, feet_y),
+        axes=(half_w, max(int(half_w * 0.35), 5)),
+        angle=0,
+        startAngle=-45,
+        endAngle=235,
+        color=color,
+        thickness=3,
+        lineType=cv2.LINE_4,
+    )
+
+    # Filled ID tag centered above the head.
+    label = f"#{track_id}"
+    font, scale, thickness = cv2.FONT_HERSHEY_SIMPLEX, 0.55, 1
+    (tw, th), baseline = cv2.getTextSize(label, font, scale, thickness)
+    pad = 5
+    tag_w, tag_h = tw + pad * 2, th + baseline + pad
+    tag_x1 = cx - tag_w // 2
+    tag_y2 = max(int(y1) - 6, tag_h)
+    tag_y1 = tag_y2 - tag_h
+    cv2.rectangle(frame, (tag_x1, tag_y1), (tag_x1 + tag_w, tag_y2), color, -1)
+    # Black text on the bright team colors stays readable on both.
+    cv2.putText(
+        frame,
+        label,
+        (tag_x1 + pad, tag_y2 - baseline - 2),
+        font,
+        scale,
+        (10, 10, 11),
+        thickness,
+        lineType=cv2.LINE_AA,
+    )
+
+
+def _draw_ball_marker(frame: np.ndarray, box: tuple[float, float, float, float]) -> None:
+    """Filled triangle pointing down at the ball, like broadcast graphics."""
+    bx1, by1, bx2, by2 = box
+    cx = int((bx1 + bx2) / 2)
+    top_y = max(int(by1) - 8, 0)
+    size = 10
+    points = np.array(
+        [[cx, top_y], [cx - size, top_y - size * 2], [cx + size, top_y - size * 2]],
+        dtype=np.int32,
+    )
+    color = BALL_COLOR.as_bgr()
+    cv2.fillPoly(frame, [points], color)
+    cv2.polylines(frame, [points], isClosed=True, color=(10, 10, 11), thickness=1)
 
 
 def _dominant_shirt_color(crop: np.ndarray) -> np.ndarray | None:
