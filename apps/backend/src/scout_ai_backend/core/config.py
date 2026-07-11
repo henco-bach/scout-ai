@@ -25,8 +25,11 @@ class Settings(BaseSettings):
     ai_provider: AIProviderName = "mock"
 
     fireworks_api_key: str = ""
-    # Gemma 4 26B A4B IT: Google DeepMind MoE, 256K context, hosted on Fireworks AI.
-    fireworks_model: str = "accounts/fireworks/models/gemma-4-26b-a4b-it"
+    # gpt-oss-120b: broadly available on Fireworks serverless. Gemma models
+    # are also supported by this provider (see OpenAICompatibleProvider) but
+    # require Gemma access to be enabled on the Fireworks account — set
+    # FIREWORKS_MODEL to a Gemma model id once that's provisioned.
+    fireworks_model: str = "accounts/fireworks/models/gpt-oss-120b"
 
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"
