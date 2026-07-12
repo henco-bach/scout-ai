@@ -162,15 +162,47 @@ class _TrackAccumulator:
 # when they're close in time, close in position, and similar shirt color —
 # a cheap heuristic that catches the common case (brief occlusion or a
 # missed detection), not full re-identification.
-STITCH_MAX_GAP_SAMPLES = 6  # ~3s at 2fps
+STITCH_MAX_GAP_SAMPLES = 15  # ~3s at 5fps (raised from 6 when SAMPLE_FPS went from 2 to 5)
 STITCH_MAX_DISTANCE = 0.12  # normalized pitch-space distance
 STITCH_MAX_COLOR_DISTANCE = 40.0
+
+# Long enough to bridge a brief occlusion or missed low-confidence detection,
+# short enough that we're not inventing a ball position across a genuine
+# stoppage (ball out of frame, out of play).
+BALL_MAX_GAP_SAMPLES = 10  # ~2s at 5fps
 
 
 def _avg_color(colors: list[np.ndarray]) -> np.ndarray | None:
     if not colors:
         return None
     return np.mean(np.array(colors), axis=0)
+
+
+def _fill_ball_gaps(
+    frame_ball_box: list[tuple[float, float, float, float] | None],
+) -> list[tuple[float, float, float, float] | None]:
+    """The ball is small and frequently hidden behind players for a sample
+    or two even when clearly in play just before and after — interpolate
+    across short gaps instead of letting the marker vanish and reappear."""
+    filled = list(frame_ball_box)
+    n = len(filled)
+    i = 0
+    while i < n:
+        if filled[i] is not None:
+            i += 1
+            continue
+        gap_start = i
+        while i < n and filled[i] is None:
+            i += 1
+        gap_end = i
+        gap_len = gap_end - gap_start
+        if gap_start == 0 or gap_end == n or gap_len > BALL_MAX_GAP_SAMPLES:
+            continue
+        before, after = filled[gap_start - 1], filled[gap_end]
+        for offset in range(gap_len):
+            t = (offset + 1) / (gap_len + 1)
+            filled[gap_start + offset] = _lerp_box(before, after, t)
+    return filled
 
 
 def _stitch_tracks(
@@ -322,19 +354,27 @@ def analyze_video_sync(
                 acc.shirt_colors.append(shirt_color)
         frame_people_boxes.append(people_boxes)
 
-        if len(ball_boxes) > 0 and frame_positions:
+        if len(ball_boxes) > 0:
             bx1, by1, bx2, by2 = (float(v) for v in ball_boxes[0])
-            ball_center = ((bx1 + bx2) / 2 / width, (by1 + by2) / 2 / height)
-            nearest_id = min(
-                frame_positions, key=lambda tid: _distance(frame_positions[tid], ball_center)
-            )
-            tracks[nearest_id].ball_frames += 1
-            possession_sequence.append((sampled - 1, nearest_id))
             frame_ball_box.append((bx1, by1, bx2, by2))
+            # Possession needs a tracked player to attribute the ball to, but
+            # that's a separate concern from whether the ball itself was
+            # found — this used to be one combined condition, which silently
+            # dropped a perfectly good ball detection whenever no player
+            # happened to be tracked in that same sampled frame.
+            if frame_positions:
+                ball_center = ((bx1 + bx2) / 2 / width, (by1 + by2) / 2 / height)
+                nearest_id = min(
+                    frame_positions, key=lambda tid: _distance(frame_positions[tid], ball_center)
+                )
+                tracks[nearest_id].ball_frames += 1
+                possession_sequence.append((sampled - 1, nearest_id))
         else:
             frame_ball_box.append(None)
 
     cap.release()
+
+    frame_ball_box = _fill_ball_gaps(frame_ball_box)
 
     tracks, track_remap = _stitch_tracks(tracks)
     possession_sequence = [
