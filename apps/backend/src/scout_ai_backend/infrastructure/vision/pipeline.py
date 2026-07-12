@@ -451,6 +451,17 @@ def analyze_video_sync(
     return stats, players, annotated_path
 
 
+def _lerp_box(
+    a: tuple[float, float, float, float], b: tuple[float, float, float, float], t: float
+) -> tuple[float, float, float, float]:
+    return (
+        a[0] + (b[0] - a[0]) * t,
+        a[1] + (b[1] - a[1]) * t,
+        a[2] + (b[2] - a[2]) * t,
+        a[3] + (b[3] - a[3]) * t,
+    )
+
+
 def _render_annotated_video(
     video_path: str,
     *,
@@ -484,6 +495,11 @@ def _render_annotated_video(
         if not ok or frame_index // frame_interval > last_sample:
             break
         sample_index = min(frame_index // frame_interval, last_sample)
+        next_index = min(sample_index + 1, last_sample)
+        # How far this native frame sits between the two surrounding 2fps
+        # samples — lets us glide positions smoothly instead of holding
+        # each sample for ~12-15 frames and snapping to the next one.
+        t = (frame_index % frame_interval) / frame_interval
         frame_index += 1
 
         if writer is None:
@@ -492,13 +508,20 @@ def _render_annotated_video(
                 raw_path, cv2.VideoWriter_fourcc(*"mp4v"), source_fps, (width, height)
             )
 
-        for track_id, (x1, y1, x2, y2) in frame_people_boxes[sample_index].items():
+        current_boxes = frame_people_boxes[sample_index]
+        next_boxes = frame_people_boxes[next_index]
+        for track_id, box in current_boxes.items():
+            if track_id in next_boxes:
+                box = _lerp_box(box, next_boxes[track_id], t)
             team = team_by_track.get(track_id, TeamSide.HOME)
             color = (HOME_COLOR if team is TeamSide.HOME else AWAY_COLOR).as_bgr()
-            _draw_player_marker(frame, (x1, y1, x2, y2), track_id, color)
+            _draw_player_marker(frame, box, track_id, color)
 
         ball_box = frame_ball_box[sample_index]
+        next_ball_box = frame_ball_box[next_index]
         if ball_box is not None:
+            if next_ball_box is not None:
+                ball_box = _lerp_box(ball_box, next_ball_box, t)
             _draw_ball_marker(frame, ball_box)
 
         writer.write(frame)
