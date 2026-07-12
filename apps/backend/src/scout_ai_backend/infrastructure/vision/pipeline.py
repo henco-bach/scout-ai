@@ -31,17 +31,20 @@ _COCO_BALL_CLASS_ID = 32
 MIN_PERSON_CONFIDENCE = 0.3
 MIN_BALL_CONFIDENCE = 0.15
 
-SAMPLE_FPS = 2.0
+SAMPLE_FPS = 5.0
+# 300 sampled frames at 5fps covers 60s of play, matching the ~60-90s clips
+# this pipeline expects. Each sampled frame is a Roboflow API round-trip, so
+# raising this multiplies total processing time roughly linearly.
 MAX_SAMPLED_FRAMES = 300
-# Drop short-lived spurious tracks (false positives, occlusions). At 2
-# sampled fps, 8 frames is ~4s of continuous presence — measured empirically
+# Drop short-lived spurious tracks (false positives, occlusions). At 5
+# sampled fps, 20 frames is ~4s of continuous presence — measured empirically
 # on real footage: ByteTrack's IoU matching is designed for near-30fps input,
-# so at our much sparser 2fps sampling rate, fast-moving players routinely
-# get reassigned a new track ID every few seconds even when detection itself
-# is solid. 15 frames (~7.5s) turned out to filter out almost every real
-# player, not just false positives. A dedicated re-identification model
-# would fix this properly; out of scope for now.
-MIN_TRACK_FRAMES = 8
+# so at our much sparser sampling rate, fast-moving players routinely get
+# reassigned a new track ID every few seconds even when detection itself is
+# solid. Scale this with SAMPLE_FPS to hold the same ~4s real-world
+# threshold. A dedicated re-identification model would fix this properly;
+# out of scope for now.
+MIN_TRACK_FRAMES = 20
 HEATMAP_COLS = 20
 HEATMAP_ROWS = 12
 MOMENTUM_BUCKETS = 10
