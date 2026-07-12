@@ -28,7 +28,12 @@ BALL_CLASS_ID = 1
 _COCO_PERSON_CLASS_ID = 0
 _COCO_BALL_CLASS_ID = 32
 
-MIN_PERSON_CONFIDENCE = 0.3
+# Raised from 0.3: Roboflow's model sometimes classifies sideline officials
+# (assistant referees/linesmen) as "player" rather than "referee", and those
+# misclassifications tend to score lower confidence than genuine in-play
+# detections. This is a blunt instrument, not a targeted fix — it may also
+# drop real players who are small, distant, or partially occluded.
+MIN_PERSON_CONFIDENCE = 0.45
 MIN_BALL_CONFIDENCE = 0.15
 
 SAMPLE_FPS = 5.0
