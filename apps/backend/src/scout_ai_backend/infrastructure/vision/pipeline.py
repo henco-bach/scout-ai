@@ -36,20 +36,20 @@ _COCO_BALL_CLASS_ID = 32
 MIN_PERSON_CONFIDENCE = 0.45
 MIN_BALL_CONFIDENCE = 0.15
 
-SAMPLE_FPS = 5.0
-# 300 sampled frames at 5fps covers 60s of play, matching the ~60-90s clips
-# this pipeline expects. Each sampled frame is a Roboflow API round-trip, so
-# raising this multiplies total processing time roughly linearly.
-MAX_SAMPLED_FRAMES = 300
-# Drop short-lived spurious tracks (false positives, occlusions). At 5
-# sampled fps, 20 frames is ~4s of continuous presence — measured empirically
-# on real footage: ByteTrack's IoU matching is designed for near-30fps input,
-# so at our much sparser sampling rate, fast-moving players routinely get
-# reassigned a new track ID every few seconds even when detection itself is
-# solid. Scale this with SAMPLE_FPS to hold the same ~4s real-world
-# threshold. A dedicated re-identification model would fix this properly;
-# out of scope for now.
-MIN_TRACK_FRAMES = 20
+# 25fps approximates native frame rate for typical footage (25-30fps
+# source), so frame_interval below works out to ~1 — i.e. every frame gets
+# analyzed rather than a sparse sample. This is also the frame rate
+# ByteTrack's IoU matching is actually designed for; the ID churn documented
+# below was largely a symptom of feeding it far sparser input than that.
+# Trade-off: at 400 max sampled frames (each a Roboflow API round-trip),
+# this only covers ~16s of footage, so clips need to be short (~10s).
+SAMPLE_FPS = 25.0
+MAX_SAMPLED_FRAMES = 400
+# Drop short-lived spurious tracks (false positives, occlusions). Scale
+# with SAMPLE_FPS to hold a ~4s real-world threshold regardless of sample
+# rate. A dedicated re-identification model would fix fragmentation
+# properly; out of scope for now.
+MIN_TRACK_FRAMES = round(4 * SAMPLE_FPS)
 HEATMAP_COLS = 20
 HEATMAP_ROWS = 12
 MOMENTUM_BUCKETS = 10
@@ -162,14 +162,18 @@ class _TrackAccumulator:
 # when they're close in time, close in position, and similar shirt color —
 # a cheap heuristic that catches the common case (brief occlusion or a
 # missed detection), not full re-identification.
-STITCH_MAX_GAP_SAMPLES = 15  # ~3s at 5fps (raised from 6 when SAMPLE_FPS went from 2 to 5)
+# Derived from SAMPLE_FPS (not hardcoded) so these real-world time budgets
+# stay correct if the sample rate changes again — a fixed sample count
+# silently drifted out of sync with its own "~3s" comment the last two
+# times SAMPLE_FPS was raised.
+STITCH_MAX_GAP_SAMPLES = round(3 * SAMPLE_FPS)  # ~3s tolerance for a lost/occluded track
 STITCH_MAX_DISTANCE = 0.12  # normalized pitch-space distance
 STITCH_MAX_COLOR_DISTANCE = 40.0
 
 # Long enough to bridge a brief occlusion or missed low-confidence detection,
 # short enough that we're not inventing a ball position across a genuine
 # stoppage (ball out of frame, out of play).
-BALL_MAX_GAP_SAMPLES = 10  # ~2s at 5fps
+BALL_MAX_GAP_SAMPLES = round(2 * SAMPLE_FPS)  # ~2s tolerance
 
 
 def _avg_color(colors: list[np.ndarray]) -> np.ndarray | None:
