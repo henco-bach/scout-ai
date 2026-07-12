@@ -44,7 +44,7 @@ const features = [
     icon: FileText,
     title: "AI Tactical Reports",
     description:
-      "A professional analyst-style report with coach recommendations — generated from your match, not invented.",
+      "A professional analyst-style report with coach recommendations, generated from your match, not invented.",
   },
 ];
 
@@ -57,7 +57,7 @@ export function Features() {
             Everything a match analyst gives you
           </h2>
           <p className="mt-4 text-muted-foreground">
-            One upload produces the full breakdown — no manual tagging, no
+            One upload produces the full breakdown, no manual tagging, no
             analyst on payroll.
           </p>
         </Reveal>

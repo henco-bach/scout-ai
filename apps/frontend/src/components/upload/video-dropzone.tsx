@@ -67,7 +67,7 @@ export function VideoDropzone({ file, onFileChange }: VideoDropzoneProps) {
       <div>
         <p className="font-medium">Drop your match video here</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          or click to browse — MP4, MOV, or WebM
+          or click to browse: MP4, MOV, or WebM
         </p>
       </div>
       <input

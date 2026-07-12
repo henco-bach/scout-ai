@@ -15,12 +15,12 @@ const faqs = [
   {
     question: "Who is Scout AI built for?",
     answer:
-      "Schools, academies, township clubs, amateur teams, and women's teams — anyone who wants professional-grade analysis without a professional-grade budget.",
+      "Schools, academies, township clubs, amateur teams, and women's teams, anyone who wants professional-grade analysis without a professional-grade budget.",
   },
   {
     question: "Does the AI make up statistics?",
     answer:
-      "No. The AI report only explains numbers the computer-vision pipeline actually measured from your video — possession, distances, positions. It never invents figures.",
+      "No. The AI report only explains numbers the computer-vision pipeline actually measured from your video: possession, distances, positions. It never invents figures.",
   },
   {
     question: "How long does analysis take?",
@@ -30,7 +30,7 @@ const faqs = [
   {
     question: "Is my match data private?",
     answer:
-      "Yes. Your videos and reports are only visible to your account — they're never used to train models or shared with other teams.",
+      "Your videos and reports are never used to train models or shared with other teams. This is an early build without user accounts yet, so treat uploads as accessible to anyone with the match link for now.",
   },
 ];
 

@@ -11,7 +11,7 @@ const steps = [
     icon: ScanEye,
     title: "AI Watches Football",
     description:
-      "Players are detected and tracked across every frame — position, movement, team.",
+      "Players are detected and tracked across every frame: position, movement, team.",
   },
   {
     icon: LineChart,

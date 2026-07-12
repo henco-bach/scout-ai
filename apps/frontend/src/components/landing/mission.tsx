@@ -10,9 +10,9 @@ export function Mission() {
           </h2>
           <p className="mt-4 text-2xl leading-snug tracking-tight">
             Professional football analytics software costs thousands of
-            dollars. Products like Hudl, Wyscout, and StatsBomb are
-            inaccessible to most clubs — so millions of talented footballers
-            are never discovered.
+            dollars a month and needs a dedicated analyst to run it. Most
+            clubs simply cannot afford it, so millions of talented
+            footballers are never discovered.
           </p>
         </Reveal>
 
@@ -23,7 +23,7 @@ export function Mission() {
           <p className="mt-4 text-2xl leading-snug tracking-tight">
             Every school. Every academy. Every township club. Every amateur
             and women&apos;s team. Every coach. Should have access to
-            professional football intelligence — using only a smartphone
+            professional football intelligence, using only a smartphone
             recording.
           </p>
         </Reveal>

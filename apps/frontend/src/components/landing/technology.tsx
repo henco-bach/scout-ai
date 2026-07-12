@@ -3,15 +3,15 @@ import { Reveal } from "@/components/landing/reveal";
 const stack = [
   {
     title: "Computer Vision",
-    items: ["OpenCV", "Ultralytics YOLO", "ByteTrack", "Roboflow Supervision"],
+    items: ["OpenCV", "Ultralytics YOLO", "ByteTrack", "Roboflow"],
   },
   {
     title: "AI Analysis",
-    items: ["Fireworks AI", "Gemma", "Llama"],
+    items: ["Fireworks AI", "AMD Developer Cloud (ROCm GPU)"],
   },
   {
-    title: "Built for Scale",
-    items: ["FastAPI", "Next.js", "Supabase", "Celery"],
+    title: "Core Stack",
+    items: ["FastAPI", "Next.js", "SQLite", "Docker"],
   },
 ];
 
@@ -24,7 +24,7 @@ export function Technology() {
             Real computer vision. Real AI.
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Every stage of the pipeline is modular — detection, tracking, and
+            Every stage of the pipeline is modular. Detection, tracking, and
             report generation can each be swapped as better models arrive.
           </p>
         </Reveal>

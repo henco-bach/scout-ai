@@ -20,9 +20,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Scout AI — Football Intelligence for Every Team",
+  title: "Scout AI: Football Intelligence for Every Team",
   description:
-    "Professional AI-powered football analysis from a single smartphone video. Player tracking, heatmaps, tactical reports — built for every club, not just billion-dollar ones.",
+    "Professional AI-powered football analysis from a single smartphone video. Player tracking, heatmaps, tactical reports, built for every club, not just billion-dollar ones.",
 };
 
 export default function RootLayout({

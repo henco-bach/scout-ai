@@ -40,7 +40,7 @@ export default function UploadPage() {
       <div className="mx-auto w-full max-w-xl px-6 py-16">
         <h1 className="font-heading text-3xl font-semibold tracking-tight">Upload Match</h1>
         <p className="mt-2 text-muted-foreground">
-          One video, analyzed automatically — player tracking, heatmaps, and a tactical
+          One video, analyzed automatically: player tracking, heatmaps, and a tactical
           report.
         </p>
 
@@ -72,7 +72,7 @@ export default function UploadPage() {
             <Label htmlFor="kickoff">Kickoff time (optional)</Label>
             <Input
               id="kickoff"
-              placeholder="mm:ss — e.g. 1:45"
+              placeholder="mm:ss, e.g. 1:45"
               value={kickoffTime}
               onChange={(e) => setKickoffTime(e.target.value)}
               disabled={mutation.isPending}

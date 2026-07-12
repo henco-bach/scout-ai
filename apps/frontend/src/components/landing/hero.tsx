@@ -44,7 +44,7 @@ export function Hero() {
           className="mt-6 max-w-xl text-lg text-muted-foreground"
         >
           Professional AI-powered football analysis from a single smartphone
-          video. Player tracking, heatmaps, and tactical reports — built for
+          video. Player tracking, heatmaps, and tactical reports, built for
           every club, not just the billion-dollar ones.
         </motion.p>
 

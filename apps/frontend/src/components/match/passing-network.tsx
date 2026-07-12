@@ -64,7 +64,7 @@ export function PassingNetwork({
   if (passingNetwork.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        No passes were detected in this match — either possession changed teams too quickly to
+        No passes were detected in this match. Either possession changed teams too quickly to
         track, or too few players stayed on-screen long enough to link together.
       </p>
     );
