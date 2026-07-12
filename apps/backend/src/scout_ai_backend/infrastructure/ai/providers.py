@@ -76,7 +76,11 @@ class OpenAICompatibleProvider(AIProvider):
                 json={
                     "model": self._model,
                     "temperature": 0.3,
-                    "max_tokens": 800,
+                    # gpt-oss-120b via Fireworks burns a chunk of this budget on
+                    # reasoning tokens before it emits the final JSON, so 800
+                    # was cutting the response off mid-string before
+                    # "recommendations" was even reached.
+                    "max_tokens": 2000,
                     "messages": [
                         {"role": "system", "content": SYSTEM_PROMPT},
                         {"role": "user", "content": user_prompt},

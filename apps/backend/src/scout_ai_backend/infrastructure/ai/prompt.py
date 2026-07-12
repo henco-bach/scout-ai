@@ -52,8 +52,12 @@ def build_user_prompt(match_title: str, stats: MatchStatistics) -> str:
 
 
 def parse_report(raw: str, stats: MatchStatistics, model_name: str) -> TacticalReport:
+    text = raw.strip()
+    if text.startswith("```"):
+        text = text.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+
     try:
-        parsed = json.loads(raw)
+        parsed = json.loads(text)
         summary = str(parsed["summary"])
         insights = [str(item) for item in parsed["insights"]]
         recommendations = [str(item) for item in parsed["recommendations"]]
