@@ -343,6 +343,7 @@ def analyze_video_sync(
         tid: acc for tid, acc in tracks.items() if len(acc.positions) >= MIN_TRACK_FRAMES
     }
     team_by_track = _cluster_teams(valid_tracks)
+    display_number_by_track = _assign_display_numbers(team_by_track, valid_tracks)
 
     pass_counts, passes_made, passes_received, turnovers_by_team = _compute_passes(
         possession_sequence, team_by_track
@@ -447,6 +448,7 @@ def analyze_video_sync(
         frame_people_boxes=frame_people_boxes,
         frame_ball_box=frame_ball_box,
         team_by_track=team_by_track,
+        display_number_by_track=display_number_by_track,
         source_fps=source_fps,
         kickoff_offset_seconds=kickoff_offset_seconds,
     )
@@ -472,6 +474,7 @@ def _render_annotated_video(
     frame_people_boxes: list[dict[int, tuple[float, float, float, float]]],
     frame_ball_box: list[tuple[float, float, float, float] | None],
     team_by_track: dict[int, TeamSide],
+    display_number_by_track: dict[int, int],
     source_fps: float,
     kickoff_offset_seconds: float = 0.0,
 ) -> str:
@@ -514,11 +517,16 @@ def _render_annotated_video(
         current_boxes = frame_people_boxes[sample_index]
         next_boxes = frame_people_boxes[next_index]
         for track_id, box in current_boxes.items():
+            # Tracks that never reached MIN_TRACK_FRAMES don't have a team
+            # or roster number — drawing them anyway is exactly the flicker
+            # of spurious, scattered-looking ids we don't want on screen.
+            if track_id not in display_number_by_track:
+                continue
             if track_id in next_boxes:
                 box = _lerp_box(box, next_boxes[track_id], t)
             team = team_by_track.get(track_id, TeamSide.HOME)
             color = (HOME_COLOR if team is TeamSide.HOME else AWAY_COLOR).as_bgr()
-            _draw_player_marker(frame, box, track_id, color)
+            _draw_player_marker(frame, box, display_number_by_track[track_id], color)
 
         ball_box = frame_ball_box[sample_index]
         next_ball_box = frame_ball_box[next_index]
@@ -632,13 +640,34 @@ def _dominant_shirt_color(crop: np.ndarray) -> np.ndarray | None:
     return np.median(non_green.reshape(-1, 3), axis=0)
 
 
+def _hue_features(bgr: np.ndarray) -> list[float]:
+    """Project a BGR color onto a hue-angle unit circle, scaled by
+    saturation. Clustering on raw BGR mixes hue with brightness, so two
+    kits with different lighting (a shadowed red vs a sunlit yellow) can
+    end up closer in BGR space than two same-lit shirts of genuinely
+    different colors — and red itself wraps around at hue 0/180, so a
+    single red kit can split across both ends of the raw scale. The
+    circular (cos, sin) encoding fixes both: distance reflects true hue
+    difference, and red no longer straddles a seam. Low-saturation kits
+    (white/black/grey, referees) collapse toward the origin instead of
+    forcing themselves into either team's cluster."""
+    pixel = np.uint8([[np.clip(bgr, 0, 255)]])
+    h, s, _ = cv2.cvtColor(pixel, cv2.COLOR_BGR2HSV)[0, 0]
+    angle = np.deg2rad(float(h) * 2.0)
+    weight = float(s) / 255.0
+    return [np.cos(angle) * weight, np.sin(angle) * weight]
+
+
 def _cluster_teams(tracks: dict[int, _TrackAccumulator]) -> dict[int, TeamSide]:
     colored_ids = [tid for tid, acc in tracks.items() if acc.shirt_colors]
     if len(colored_ids) < 2:
         return dict.fromkeys(tracks, TeamSide.HOME)
 
     samples = np.array(
-        [np.median(np.array(tracks[tid].shirt_colors), axis=0) for tid in colored_ids],
+        [
+            _hue_features(np.median(np.array(tracks[tid].shirt_colors), axis=0))
+            for tid in colored_ids
+        ],
         dtype=np.float32,
     )
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 20, 0.5)
@@ -651,6 +680,24 @@ def _cluster_teams(tracks: dict[int, _TrackAccumulator]) -> dict[int, TeamSide]:
     for tid in tracks:
         team_by_track.setdefault(tid, TeamSide.HOME)
     return team_by_track
+
+
+def _assign_display_numbers(
+    team_by_track: dict[int, TeamSide], tracks: dict[int, _TrackAccumulator]
+) -> dict[int, int]:
+    """Raw ByteTrack ids are whatever survived stitching — arbitrary, often
+    large, and in no particular order. Renumber each team 1..N by first
+    appearance so the on-video tags read like a roster instead of
+    scattered debug ids."""
+    display_by_track: dict[int, int] = {}
+    for team in (TeamSide.HOME, TeamSide.AWAY):
+        team_ids = sorted(
+            (tid for tid in tracks if team_by_track.get(tid) is team),
+            key=lambda tid: min(tracks[tid].sample_indices, default=0),
+        )
+        for number, tid in enumerate(team_ids, start=1):
+            display_by_track[tid] = number
+    return display_by_track
 
 
 def _compute_passes(
