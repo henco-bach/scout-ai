@@ -41,6 +41,7 @@ def _to_match_response(match: Match) -> MatchResponse:
         error_message=match.error_message,
         video_url=f"/media/{Path(match.video_path).name}",
         annotated_video_url=_annotated_video_url(match),
+        kickoff_offset_seconds=match.kickoff_offset_seconds,
         created_at=match.created_at,
         updated_at=match.updated_at,
     )
@@ -90,6 +91,7 @@ async def get_match(
         error_message=match.error_message,
         video_url=f"/media/{Path(match.video_path).name}",
         annotated_video_url=_annotated_video_url(match),
+        kickoff_offset_seconds=match.kickoff_offset_seconds,
         created_at=match.created_at,
         updated_at=match.updated_at,
         statistics=(

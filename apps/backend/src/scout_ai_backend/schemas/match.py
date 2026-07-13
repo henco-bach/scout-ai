@@ -74,6 +74,7 @@ class MatchResponse(BaseModel):
     error_message: str | None
     video_url: str
     annotated_video_url: str | None
+    kickoff_offset_seconds: float = 0.0
     created_at: datetime
     updated_at: datetime
 
