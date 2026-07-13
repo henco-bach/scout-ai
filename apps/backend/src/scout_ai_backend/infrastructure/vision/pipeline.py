@@ -45,11 +45,14 @@ MIN_BALL_CONFIDENCE = 0.15
 # this only covers ~16s of footage, so clips need to be short (~10s).
 SAMPLE_FPS = 25.0
 MAX_SAMPLED_FRAMES = 400
-# Drop short-lived spurious tracks (false positives, occlusions). Scale
-# with SAMPLE_FPS to hold a ~4s real-world threshold regardless of sample
-# rate. A dedicated re-identification model would fix fragmentation
-# properly; out of scope for now.
-MIN_TRACK_FRAMES = round(4 * SAMPLE_FPS)
+# Drop short-lived spurious tracks (false positives, occlusions). Was 4s
+# -- reasonable for a 60-90s clip, but ~30% of an entire 13s clip's
+# runway, so on a short clip with real camera movement, ByteTrack ID
+# churn can plausibly filter out every single track. 1.5s is enough to
+# drop one-frame false positives while surviving on a short clip. A
+# dedicated re-identification model would fix fragmentation properly;
+# out of scope for now.
+MIN_TRACK_FRAMES = round(1.5 * SAMPLE_FPS)
 HEATMAP_COLS = 20
 HEATMAP_ROWS = 12
 MOMENTUM_BUCKETS = 10
