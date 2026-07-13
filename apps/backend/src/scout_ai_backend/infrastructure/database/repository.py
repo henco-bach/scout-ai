@@ -138,3 +138,11 @@ class MatchRepository:
         await self.session.commit()
         await self.session.refresh(model)
         return _player_to_entity(model)
+
+    async def delete(self, match_id: UUID) -> bool:
+        model = await self.session.get(MatchModel, str(match_id))
+        if model is None:
+            return False
+        await self.session.delete(model)
+        await self.session.commit()
+        return True

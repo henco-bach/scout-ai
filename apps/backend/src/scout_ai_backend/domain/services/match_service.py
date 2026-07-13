@@ -36,3 +36,6 @@ class MatchService:
 
     async def get_players(self, match_id: uuid.UUID) -> list[Player]:
         return await self._repository.get_players(match_id)
+
+    async def delete_match(self, match_id: uuid.UUID) -> bool:
+        return await self._repository.delete(match_id)

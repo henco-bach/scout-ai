@@ -117,6 +117,22 @@ async def get_match(
     )
 
 
+@router.delete("/matches/{match_id}", status_code=204)
+async def delete_match(
+    match_id: UUID,
+    service: Annotated[MatchService, Depends(get_match_service)],
+) -> None:
+    match = await service.get_match(match_id)
+    if match is None:
+        raise HTTPException(status_code=404, detail="Match not found")
+
+    for video_path in (match.video_path, match.annotated_video_path):
+        if video_path:
+            Path(video_path).unlink(missing_ok=True)
+
+    await service.delete_match(match_id)
+
+
 @router.patch("/players/{player_id}", response_model=PlayerResponse)
 async def rename_player(
     player_id: UUID,
