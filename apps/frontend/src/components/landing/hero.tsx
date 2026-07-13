@@ -61,7 +61,7 @@ export function Hero() {
             size="lg"
             variant="outline"
             nativeButton={false}
-            render={<Link href="/matches" />}
+            render={<Link href="/matches/c0533174-bea5-4eab-8b21-69d5d851b9da" />}
           >
             View Demo
           </Button>
